@@ -14,6 +14,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 
 @Getter
 public class Entry {
@@ -72,9 +73,9 @@ public class Entry {
         return this;
     }
 
-        /**
-         * Sends update to scoreboard, does String setup and score settings
-         */
+    /**
+     * Sends update to scoreboard, does String setup and score settings
+     */
 
     private void sendToScoreboard(String input) {
         Objective objective = playerScoreboard.getObjective();
@@ -121,6 +122,7 @@ public class Entry {
 
     /**
      * Sets up team information, and sends Entry to PlayerScoreboard, should be called after all other values are set
+     *
      * @return Entry
      */
     public Entry send() {
@@ -131,6 +133,7 @@ public class Entry {
         } else {
             team = scoreboard.registerNewTeam(uniqueString);
         }
+
         Player player = playerScoreboard.getPlayer();
         playerScoreboard.getEntries().add(this);
         if (!(countdown)) {
@@ -138,26 +141,61 @@ public class Entry {
             player.setScoreboard(playerScoreboard.getScoreboard());
             return this;
         }
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                time = time.subtract(BigDecimal.valueOf(0.1));
-                String newText = text + " " + time + "s";
-                Bukkit.getPluginManager().callEvent(new EntryTickEvent(Entry.this, playerScoreboard));
-                if (time.doubleValue() <= 0) {
-                    stop();
-                    Bukkit.getPluginManager().callEvent(new EntryCancelEvent(Entry.this, playerScoreboard));
-                    this.cancel();
-                    return;
-                }
 
-                sendToScoreboard(newText);
-                player.setScoreboard(scoreboard);
+        new BukkitRunnable() {
+            int minCount = 0;
+            public void run() {
+                if (time.doubleValue() <= 60) {
+                    time = time.subtract(BigDecimal.valueOf(0.1));
+                    String newText = text + " " + time + "s";
+                    Bukkit.getPluginManager().callEvent(new EntryTickEvent(Entry.this, playerScoreboard));
+                    if (time.doubleValue() <= 0) {
+                        stop();
+                        Bukkit.getPluginManager().callEvent(new EntryCancelEvent(Entry.this, playerScoreboard));
+                        this.cancel();
+                        return;
+                    }
+
+                    sendToScoreboard(newText);
+                    player.setScoreboard(scoreboard);
+                } else if (time.doubleValue() <= 3600) {
+                    int minutes = time.intValue() / 60;
+                    int seconds = time.intValue() % 60;
+                    DecimalFormat formatter = new DecimalFormat("00");
+                    String newText = text + " " +  formatter.format(minutes) + ":" + formatter.format(seconds) + "m";
+
+                    minCount++;
+
+                    if (minCount == 10) {
+                        time = time.subtract(BigDecimal.valueOf(1));
+
+                        Bukkit.getPluginManager().callEvent(new EntryTickEvent(Entry.this, playerScoreboard));
+                        sendToScoreboard(newText);
+                        player.setScoreboard(scoreboard);
+                        minCount = 0;
+                    }
+                } else {
+                    int hours = time.intValue() / 3600;
+                    int minutes = time.intValue() / 60;
+                    int seconds = time.intValue() % 60;
+                    DecimalFormat formatter = new DecimalFormat("00");
+                    String newText = text + " " + formatter.format(hours) + ":" + formatter.format(minutes) + ":" + formatter.format(seconds) + "h";
+
+                    minCount++;
+
+                    if (minCount == 10) {
+                        time = time.subtract(BigDecimal.valueOf(1));
+
+                        Bukkit.getPluginManager().callEvent(new EntryTickEvent(Entry.this, playerScoreboard));
+                        sendToScoreboard(newText);
+                        player.setScoreboard(scoreboard);
+                        minCount = 0;
+                    }
+                }
             }
-        }.runTaskTimer(Glaedr.getInstance().getPlugin(), 2l, 2l);
+        }.runTaskTimer(Glaedr.getInstance().getPlugin(), 2L, 2L);
 
         return this;
     }
-
 
 }

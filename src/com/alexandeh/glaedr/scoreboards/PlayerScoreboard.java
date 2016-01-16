@@ -10,9 +10,7 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 @Getter
 public class PlayerScoreboard {
@@ -25,16 +23,20 @@ public class PlayerScoreboard {
     private Map<Entry, Integer> scores = new HashMap<>();
     private Map<Entry, String> entryNames = new HashMap<>();
     private Glaedr glaedr = Glaedr.getInstance();
+    private Map<Entry, Integer> bottomPlaceHolders = new HashMap<>();
+    private List<Entry> topPlaceHolders = new ArrayList<>();
 
     /**
      * PlayerScoreboard constructor
      * No need to instantiate this class, it is all done within Glaedr
+     *
      * @param player
      */
-    public PlayerScoreboard(Player player){
+    public PlayerScoreboard(Player player) {
         Validate.notNull(player, "Player cannot be null!");
         this.player = player;
         this.attemptHook();
+
 
         getScoreboards().add(this);
     }
@@ -42,6 +44,7 @@ public class PlayerScoreboard {
     /**
      * This method returns a unique String that will be used to prevent scoreboard flickering
      * It will return null if all ChatColors are currently being used
+     *
      * @param entry Scoreboard Entry
      * @return String
      */
@@ -49,14 +52,13 @@ public class PlayerScoreboard {
         for (ChatColor color : ChatColor.values()) {
             String text;
             if (entry.getText().length() >= 16) {
-                text = entry.getText().substring(0,16);
+                text = entry.getText().substring(0, 16);
             } else {
                 text = entry.getText();
             }
-            if (!(entryNames.values().contains(color + "" + ChatColor.getLastColors(text)))) {
-                Bukkit.broadcastMessage(ChatColor.getLastColors(text) + "HELLO.");
-                entryNames.put(entry, color + ""+ ChatColor.RESET + ChatColor.getLastColors(text));
-                return color + ""+ ChatColor.RESET + ChatColor.getLastColors(text);
+            if (!(entryNames.values().contains(color + "" + ChatColor.WHITE + ChatColor.getLastColors(text)))) {
+                entryNames.put(entry, color + "" + ChatColor.WHITE + ChatColor.getLastColors(text));
+                return color + "" + ChatColor.WHITE + ChatColor.getLastColors(text);
             }
         }
         return null;
@@ -94,8 +96,10 @@ public class PlayerScoreboard {
     }
 
 
+
     /**
      * This will return a HashSet that contains all existing PlayerScoreboards
+     *
      * @return PlayerScoreboard HashSet
      */
     public static HashSet<PlayerScoreboard> getScoreboards() {

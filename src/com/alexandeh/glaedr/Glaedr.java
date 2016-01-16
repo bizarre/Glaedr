@@ -1,7 +1,6 @@
 package com.alexandeh.glaedr;
 
 import com.alexandeh.glaedr.listeners.ScoreboardListeners;
-import com.alexandeh.glaedr.scoreboards.PlayerScoreboard;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
@@ -67,7 +66,6 @@ public class Glaedr implements Listener {
         this.title = title;
         this.hook = hook;
         instance = this;
-        System.out.print(PlayerScoreboard.getScoreboards().size());
     }
 
     /**
