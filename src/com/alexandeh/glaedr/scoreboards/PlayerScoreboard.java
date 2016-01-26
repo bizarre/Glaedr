@@ -51,11 +51,13 @@ public class PlayerScoreboard {
     public String getNewUniqueString(Entry entry) {
         for (ChatColor color : ChatColor.values()) {
             String text;
+
             if (entry.getText().length() >= 16) {
                 text = entry.getText().substring(0, 16);
             } else {
                 text = entry.getText();
             }
+
             if (!(entryNames.values().contains(color + "" + ChatColor.WHITE + ChatColor.getLastColors(text)))) {
                 entryNames.put(entry, color + "" + ChatColor.WHITE + ChatColor.getLastColors(text));
                 return color + "" + ChatColor.WHITE + ChatColor.getLastColors(text);
@@ -115,6 +117,19 @@ public class PlayerScoreboard {
         for (PlayerScoreboard playerScoreboard : scoreboards) {
             if (playerScoreboard.getPlayer().getName().equalsIgnoreCase(player.getName())) {
                 return playerScoreboard;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param id Required to compare ID's
+     * @return Entry if matches parameter id
+     */
+    public Entry getEntry(String id) {
+        for (Entry entry : entries) {
+            if (entry.getId().equalsIgnoreCase(id)) {
+                return entry;
             }
         }
         return null;

@@ -1,9 +1,12 @@
 package com.alexandeh.glaedr;
 
 import com.alexandeh.glaedr.listeners.ScoreboardListeners;
+import com.alexandeh.glaedr.scoreboards.PlayerScoreboard;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -63,9 +66,11 @@ public class Glaedr implements Listener {
     public Glaedr(JavaPlugin plugin, String title, boolean hook) {
         Bukkit.getPluginManager().registerEvents(new ScoreboardListeners(), plugin);
         this.plugin = plugin;
-        this.title = title;
+        this.title = ChatColor.translateAlternateColorCodes('&', title);
         this.hook = hook;
         instance = this;
+
+        checkPlayers();
     }
 
     /**
@@ -89,6 +94,21 @@ public class Glaedr implements Listener {
      */
     public Glaedr(JavaPlugin plugin, boolean hook) {
         this(plugin, "Title", hook);
+    }
+
+    /**
+     * Creates a scorebaord for all online players
+     */
+    private void checkPlayers() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            PlayerScoreboard playerScoreboard = PlayerScoreboard.getScoreboard(player);
+            if (playerScoreboard == null) {
+                long startTime = System.currentTimeMillis();
+                new PlayerScoreboard(player);
+                long endTime = System.currentTimeMillis();
+                player.sendMessage(ChatColor.GREEN + "Scoreboard created in " + (endTime - startTime) + "ms.");
+            }
+        }
     }
 
     /**

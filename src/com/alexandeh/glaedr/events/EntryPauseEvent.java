@@ -13,18 +13,19 @@ import org.bukkit.event.HandlerList;
 /**
  * This event is called when an entry is abruptly cancelled by entry#cancel
  */
-public class EntryCancelEvent extends Event {
+public class EntryPauseEvent extends Event {
 
     private static final HandlerList handlers = new HandlerList();
     private Entry entry;
     private PlayerScoreboard scoreboard;
     private Player player;
 
-    public EntryCancelEvent(Entry entry, PlayerScoreboard scoreboard) {
+    public EntryPauseEvent(Entry entry, PlayerScoreboard scoreboard) {
         this.entry = entry;
         this.scoreboard = scoreboard;
         this.player = scoreboard.getPlayer();
     }
+
     public HandlerList getHandlers() {
         return handlers;
     }

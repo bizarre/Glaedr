@@ -25,7 +25,12 @@ public class EntryTickEvent extends Event {
         this.scoreboard = scoreboard;
         this.player = scoreboard.getPlayer();
     }
+
     public HandlerList getHandlers() {
+        return handlers;
+    }
+
+    public static HandlerList getHandlerList() {
         return handlers;
     }
 }

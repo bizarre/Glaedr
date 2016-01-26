@@ -18,9 +18,11 @@ public class ScoreboardListeners implements Listener {
         PlayerScoreboard playerScoreboard = PlayerScoreboard.getScoreboard(player);
         if (playerScoreboard == null) {
             long startTime = System.currentTimeMillis();
-            PlayerScoreboard scoreboard = new PlayerScoreboard(player);
+            new PlayerScoreboard(player);
             long endTime = System.currentTimeMillis();
             player.sendMessage(ChatColor.GREEN + "Scoreboard created in " + (endTime - startTime) + "ms.");
+        } else {
+            player.setScoreboard(playerScoreboard.getScoreboard());
         }
     }
 }
