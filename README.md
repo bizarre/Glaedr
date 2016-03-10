@@ -2,7 +2,7 @@
 Extensive yet simplistic Scoreboard API for the Bukkit/Spigot API
 
 ## Installation
-1. Pull the latest version of Glaedr or download it here.
+1. Pull the latest version of Glaedr or download it here.(https://www.dropbox.com/s/52cgyy53unvf2sn/Glaedr.jar?dl=1)
 2. Add it to your project's build path. (Note: Make sure to extract Glaedr.jar into your output path, so people don't need to add Glaedr into their server!)
 3. Instantiate Glaedr, you should have something like this in your main class:
 
