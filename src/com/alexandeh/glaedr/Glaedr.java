@@ -66,7 +66,7 @@ public class Glaedr implements Listener {
     public Glaedr(JavaPlugin plugin, String title, boolean hook) {
         Bukkit.getPluginManager().registerEvents(new ScoreboardListeners(), plugin);
         this.plugin = plugin;
-        this.title = ChatColor.translateAlternateColorCodes('&', title);
+        this.title = title;
         this.hook = hook;
         instance = this;
 
