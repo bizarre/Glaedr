@@ -105,7 +105,7 @@ public class Entry {
         }
         String prefix = "", suffix = "";
         if (input.length() > 32) {
-            throw new StringIndexOutOfBoundsException("Entry text must be under 32 characters!");
+            input = input.substring(0, 32);
         }
 
         if (input.length() <= 16) {
