@@ -6,7 +6,7 @@ import com.alexandeh.glaedr.events.EntryFinishEvent;
 import com.alexandeh.glaedr.events.EntryPauseEvent;
 import com.alexandeh.glaedr.events.EntryTickEvent;
 import lombok.Getter;
-import net.md_5.bungee.api.ChatColor;
+import org.bukkit.ChatColor;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
