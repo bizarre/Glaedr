@@ -7,6 +7,7 @@ Extensive yet simplistic Scoreboard API for the Bukkit/Spigot API
 + Scoreboard "scores" now counts down from 15 to 1, instead of from 1 to 15. This will soon be optional.
 + The new version is some-what backwards compatible. entry#cancel and entry#pause have been replaced with entry#setCancelled(boolean) and entry#setPaused(boolean).
 + Entries that do not countup nor countdown will still update, so that you can edit the text later and it will update on the scoreboard. This also will keep the position of the entry updated.
++ Installation has been changed a bit.
 
 ##### As with any other beta, expect bugs. Feel free to fix them yourself and submit a pull request, or simply file an issue and it will be looked at ASAP.
 
@@ -19,7 +20,10 @@ Extensive yet simplistic Scoreboard API for the Bukkit/Spigot API
   private Glaedr glaedr;
   
   public void onEnable() {
-    glaedr = new Glaedr(this, title, hook);
+    glaedr = new Glaedr(this, title, hook, overrideTitle, scoreCountUp);
+    glaedr.getBottomWrappers().add("&7&m--------------------");
+    glaedr.getTopWrappers().add("&7&m--------------------");
+    glaedr.registerPlayers();
   }
   
   ```
