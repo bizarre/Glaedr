@@ -1,168 +1,386 @@
 package com.alexandeh.glaedr.scoreboards;
 
 import com.alexandeh.glaedr.Glaedr;
+import com.alexandeh.glaedr.events.EntryCancelEvent;
+import com.alexandeh.glaedr.events.EntryFinishEvent;
+import com.alexandeh.glaedr.events.EntryTickEvent;
 import lombok.Getter;
-import org.apache.commons.lang.Validate;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.*;
 
+/**
+ * Copyright 2016 Alexander Maxwell
+ * Use and or redistribution of compiled JAR file and or source code is permitted only if given
+ * explicit permission from original author: Alexander Maxwell
+ */
 @Getter
 public class PlayerScoreboard {
 
-    private HashSet<Entry> entries = new HashSet<>();
-    private Scoreboard scoreboard;
-    private Objective objective;
+    private static Set<PlayerScoreboard> scoreboards = new HashSet<>();
+
     private Player player;
-    private static HashSet<PlayerScoreboard> scoreboards = new HashSet<>();
-    private Map<Entry, Integer> scores = new HashMap<>();
-    private Map<Entry, String> entryNames = new HashMap<>();
-    private Glaedr glaedr = Glaedr.getInstance();
-    private Map<Entry, Integer> bottomPlaceHolders = new HashMap<>();
-    private List<Entry> topPlaceHolders = new ArrayList<>();
+    @Setter
+    private Objective objective;
+    @Setter
+    private Scoreboard scoreboard;
+    private Map<Entry, String> keys;
+    private Map<Entry, Integer> scores;
+    private List<Entry> entries;
+    private List<Wrapper> wrappers;
+    private BukkitTask task;
+    private boolean countup = false;
 
-    /**
-     * PlayerScoreboard constructor
-     * No need to instantiate this class, it is all done within Glaedr
-     *
-     * @param player
-     */
-    public PlayerScoreboard(Player player) {
-        Validate.notNull(player, "Player cannot be null!");
+    public PlayerScoreboard(Glaedr main, Player player) {
         this.player = player;
-        this.attemptHook();
 
+        keys = new HashMap<>();
+        scores = new HashMap<>();
+        wrappers = new ArrayList<>();
+        entries = new ArrayList<>();
 
-        getScoreboards().add(this);
+        countup = main.isScoreCountUp();
+
+        createScoreboard(main.getTitle(), main.isHook(), main.isOverrideTitle());
+
+        for (int i = 0; i < main.getTopWrappers().size(); i++) {
+            String string = main.getTopWrappers().get(i);
+            new Wrapper("top_" + i, this, Wrapper.WrapperType.TOP).setText(string).send();
+        }
+
+        for (int i = 0; i < main.getBottomWrappers().size(); i++) {
+            String string = main.getBottomWrappers().get(i);
+            new Wrapper("bottom_" + i, this, Wrapper.WrapperType.BOTTOM).setText(string).send();
+        }
+
+        run();
+
+        scoreboards.add(this);
     }
 
-    /**
-     * This method returns a unique String that will be used to prevent scoreboard flickering
-     * It will return null if all ChatColors are currently being used
-     *
-     * @param entry Scoreboard Entry
-     * @return String
-     */
-    public String getNewUniqueString(Entry entry) {
+    public String getAssignedKey(Entry entry) {
+        if (keys.containsKey(entry)) {
+            return keys.get(entry);
+        }
         for (ChatColor color : ChatColor.values()) {
-            String text;
 
-            if (entry.getText().length() >= 16) {
-                text = entry.getText().substring(0, 16);
-            } else {
-                text = entry.getText();
+            String colorText = color + "" + ChatColor.WHITE;
+
+            if (entry.getText().length() > 16) {
+                String sub = entry.getText().substring(0, 16);
+                colorText = colorText + ChatColor.getLastColors(sub);
             }
 
-            if (!(entryNames.values().contains(color + "" + ChatColor.WHITE + ChatColor.getLastColors(text)))) {
-                entryNames.put(entry, color + "" + ChatColor.WHITE + ChatColor.getLastColors(text));
-                return color + "" + ChatColor.WHITE + ChatColor.getLastColors(text);
+            if (!keys.values().contains(colorText)) {
+                keys.put(entry, colorText);
+                return colorText;
             }
         }
-        return null;
+        throw new IndexOutOfBoundsException("No more keys available!");
     }
 
-    /**
-     * This method will check whether a boolean in the main class is true, if so it will
-     * attempt to "hook" into a players already existing scoreboard.
-     * If either the player has no existing scoreboards, or the boolean is false, it will
-     * create a new scoreboard along with a new objective.
-     */
-    private void attemptHook() {
-        if (glaedr.isHook()) {
-            if (player.getScoreboard() != Bukkit.getScoreboardManager().getMainScoreboard()) {
-                this.scoreboard = player.getScoreboard();
-                if (this.scoreboard.getObjective(DisplaySlot.SIDEBAR) != null) {
-                    this.objective = scoreboard.getObjective(DisplaySlot.SIDEBAR);
+    public int getScore(Entry entry) {
+       /* if (countup) {
+            int start = 1 + getBottomWrappers().size();
+            int goal = 15 - getTopWrappers().size();
+
+            if (entry instanceof Wrapper) {
+                Wrapper wrapper = (Wrapper) entry;
+                if (wrapper.getType() == Wrapper.WrapperType.TOP) {
+                    goal = getEntries().size() + getBottomWrappers().size() + getTopWrappers().size() + 1;
+                    start = getEntries().size() + getBottomWrappers().size() + 1;
                 } else {
-                    this.objective = scoreboard.registerNewObjective(player.getName(), "dummy");
-                    this.objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-                    this.objective.setDisplayName(glaedr.getTitle());
+                    goal = start;
+                    start = start - getBottomWrappers().size();
+                }
+            }
+
+            for (int i = start; i < goal; i++) {
+                if (!(scores.containsKey(entry))) {
+                    if (!(scores.values().contains(i))) {
+                        scores.put(entry, i);
+                        return i;
+                    }
+                } else {
+                    int score = scores.get(entry);
+                    for (int toSub = 0; toSub < start; toSub++) {
+                        if (i - toSub < score && !scores.values().contains(i - toSub)) { //TODO: Make this better
+                            scores.put(entry, i - toSub);
+                            return i - toSub;
+                        }
+                    }
+                    if (entry instanceof Wrapper && ((Wrapper) entry).getType() == Wrapper.WrapperType.BOTTOM) {
+                        if (score > start) {
+                            scores.put(entry, start);
+                            return start;
+                        }
+                    }
+                    return score;
+                }
+            }
+
+            return 0;
+        }*/
+        int start = 15 - getTopWrappers().size();
+        int goal = 0;
+
+        if (entry instanceof Wrapper) {
+            Wrapper wrapper = (Wrapper) entry;
+            if (wrapper.getType() == Wrapper.WrapperType.TOP) {
+                goal = start;
+                start = 15;
+            } else {
+                start = start - getEntries().size();
+                goal = start - getBottomWrappers().size();
+            }
+        }
+
+        for (int i = start; i > goal; i--) {
+            if (!(scores.containsKey(entry))) {
+                if (!(scores.values().contains(i))) {
+                    scores.put(entry, i);
+                    return i;
                 }
             } else {
-                this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
-                this.objective = scoreboard.registerNewObjective(player.getName(), "dummy");
-                this.objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-                this.objective.setDisplayName(glaedr.getTitle());
-            }
-        } else {
-            this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
-            this.objective = scoreboard.registerNewObjective(player.getName(), "dummy");
-            this.objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-            this.objective.setDisplayName(glaedr.getTitle());
-        }
-    }
-
-
-
-    /**
-     * This will return a HashSet that contains all existing PlayerScoreboards
-     *
-     * @return PlayerScoreboard HashSet
-     */
-    public static HashSet<PlayerScoreboard> getScoreboards() {
-        return scoreboards;
-    }
-
-    /**
-     * @param player Player paramater, required to compare names
-     * @return PlayerScoreboard
-     */
-    public static PlayerScoreboard getScoreboard(Player player) {
-        Validate.notNull(player, "Player cannot be null!");
-        for (PlayerScoreboard playerScoreboard : scoreboards) {
-            if (playerScoreboard.getPlayer().getName().equalsIgnoreCase(player.getName())) {
-                return playerScoreboard;
+                int score = scores.get(entry);
+                for (int toSub = 0; toSub < start; toSub++) {
+                    if (i - toSub > score && !scores.values().contains(i - toSub)) { //TODO: Make this better
+                        scores.put(entry, i - toSub);
+                        return i - toSub;
+                    }
+                }
+                if (entry instanceof Wrapper && ((Wrapper) entry).getType() == Wrapper.WrapperType.BOTTOM) {
+                    if (score > start) {
+                        scores.put(entry, start);
+                        return start;
+                    }
+                }
+                return score;
             }
         }
-        return null;
+        return 0;
     }
 
-    /**
-     * @param id Required to compare ID's
-     * @return Entry if matches parameter id
-     */
     public Entry getEntry(String id) {
-        for (Entry entry : entries) {
-            if (entry.getId().equalsIgnoreCase(id)) {
+        for (Entry entry : getEntries()) {
+            if (entry.getId().equals(id)) {
                 return entry;
             }
         }
         return null;
     }
 
-    /**
-     * @param entry Used to determine if entry is already contained in map, etc
-     * @return Integer used to set an entry's position on scoreboard
-     */
-    public int getScore(Entry entry) {
-        for (int scoreint = 0; scoreint < entries.size() + 1; scoreint++) {
-            if (scores.containsKey(entry)) {
-                if (scores.get(entry) == scoreint + 1) {
-                    if (!scores.values().contains(scoreint) && scoreint != 0) {
-                        scores.put(entry, scoreint);
-                        return scoreint;
-                    }
 
-                    return scoreint + 1;
-                }
-            } else {
-                if (!scores.isEmpty()) {
-                    if (!scores.values().contains(scoreint + 1)) {
-                        scores.put(entry, scoreint + 1);
-                        return scoreint + 1;
-                    }
-                } else {
-                    scores.put(entry, scoreint + 1);
-                    return scoreint + 1;
-                }
+    public static PlayerScoreboard getScoreboard(Player player) {
+        for (PlayerScoreboard playerScoreboard : getScoreboards()) {
+            if (playerScoreboard.getPlayer().getName().equals(player.getName())) {
+                return playerScoreboard;
             }
         }
-
-        return 0;
+        return null;
     }
+
+    public static Set<PlayerScoreboard> getScoreboards() {
+        return scoreboards;
+    }
+
+    private List<Wrapper> getTopWrappers() {
+        List<Wrapper> toReturn = new ArrayList<>();
+        for (Wrapper wrapper : getWrappers()) {
+            if (wrapper.getType() == Wrapper.WrapperType.TOP) {
+                toReturn.add(wrapper);
+            }
+        }
+        return toReturn;
+    }
+
+    private List<Wrapper> getBottomWrappers() {
+        List<Wrapper> toReturn = new ArrayList<>();
+        for (Wrapper wrapper : getWrappers()) {
+            if (wrapper.getType() == Wrapper.WrapperType.BOTTOM) {
+                toReturn.add(wrapper);
+            }
+        }
+        return toReturn;
+    }
+
+    public void createScoreboard(String title, boolean hook, boolean overrideTitle) { //TODO: Clean this method up
+        if (hook) {
+            if (player.getScoreboard() != Bukkit.getScoreboardManager().getMainScoreboard()) {
+                scoreboard = player.getScoreboard();
+
+                if (scoreboard.getObjective(DisplaySlot.SIDEBAR) != null) {
+                    objective = scoreboard.getObjective(DisplaySlot.SIDEBAR);
+                    if (overrideTitle) {
+                        objective.setDisplayName(title);
+                    }
+                } else {
+                    objective = scoreboard.registerNewObjective(player.getName(), "dummy");
+                    objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+                    objective.setDisplayName(title);
+                }
+                return;
+            }
+        }
+        scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+        objective = scoreboard.registerNewObjective(player.getName(), "dummy");
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+        objective.setDisplayName(title);
+    }
+
+    private void run() {
+        task = new BukkitRunnable() {
+            @Override
+            public void run() {
+
+                Iterator<Entry> entryIterator = getEntries().iterator();
+                while (entryIterator.hasNext()) {
+
+
+                    Entry entry = entryIterator.next();
+
+                    if (entry.isCancelled()) {
+                        scoreboard.resetScores(entry.getKey());
+                        keys.remove(entry);
+                        scores.remove(entry);
+                        entryIterator.remove();
+
+                        if (entry.getTime() != null && entry.getTime().doubleValue() > 0) {
+                            Bukkit.getPluginManager().callEvent(new EntryCancelEvent(entry, PlayerScoreboard.this));
+                        }
+                        continue;
+                    }
+
+
+                    Iterator<Wrapper> wrapperIterator = getWrappers().iterator();
+                    while (wrapperIterator.hasNext()) {
+                        Wrapper wrapper = wrapperIterator.next();
+
+                        if (getEntries().size() == 0) {
+                            scoreboard.resetScores(wrapper.getKey());
+                            keys.remove(wrapper);
+                            scores.remove(wrapper);
+                            continue;
+                        }
+
+                        wrapper.sendScoreboardUpdate(wrapper.getText());
+                    }
+
+                    Bukkit.getPluginManager().callEvent(new EntryTickEvent(entry, PlayerScoreboard.this));
+
+                    if (!(entry.isCountdown()) && !entry.isCountup()) {
+                        entry.sendScoreboardUpdate(entry.getText());
+                        continue;
+                    }
+
+                    if (entry.getTime().doubleValue() <= 0 && !entry.isCountup()) {
+                        entry.setCancelled(true);
+                        Bukkit.getPluginManager().callEvent(new EntryFinishEvent(entry, PlayerScoreboard.this));
+                        continue;
+                    }
+
+                    if (60 > entry.getTime().intValue() || entry.isBypassAutoFormat()) {
+                        String toSend = entry.getText() + " " + entry.getTime();
+                        if (!entry.isRemoveTimeSuffix()) {
+                            toSend = toSend + "s";
+                        }
+                        entry.setTextTime(entry.getTime() + "s");
+                        entry.sendScoreboardUpdate(toSend);
+                        if (!(entry.isPaused())) {
+                            if (entry.isCountup()) {
+                                entry.setTime(entry.getTime().add(BigDecimal.valueOf(0.1)));
+                            } else {
+                                entry.setTime(entry.getTime().subtract(BigDecimal.valueOf(0.1)));
+                            }
+                        }
+                        continue;
+                    }
+                    if (3600 > entry.getTime().intValue()) {
+                        entry.setInterval(entry.getInterval() - 1);
+
+                        int minutes = entry.getTime().intValue() / 60;
+                        int seconds = entry.getTime().intValue() % 60;
+                        DecimalFormat formatter = new DecimalFormat("00");
+                        String toSend = entry.getText() + " " + formatter.format(minutes) + ":" + formatter.format(seconds);
+                        entry.setTextTime(formatter.format(minutes) + ":" + formatter.format(seconds));
+
+                        if (!entry.isRemoveTimeSuffix()) {
+                            toSend = toSend + "m";
+                            entry.setTextTime(formatter.format(minutes) + ":" + formatter.format(seconds) + "m");
+                        }
+
+                        entry.sendScoreboardUpdate(toSend);
+
+                        if (entry.getInterval() <= 0) {
+                            if (!(entry.isPaused())) {
+                                if (entry.isCountup()) {
+                                    entry.setTime(entry.getTime().add(BigDecimal.ONE));
+                                } else {
+                                    entry.setTime(entry.getTime().subtract(BigDecimal.ONE));
+                                }
+                            }
+                            entry.setInterval(10);
+                        }
+                        continue;
+                    }
+                    entry.setInterval(entry.getInterval() - 1);
+
+                    int hours = entry.getTime().intValue() / 3600;
+                    int minutes = (entry.getTime().intValue() % 3600) / 60;
+                    int seconds = entry.getTime().intValue() % 60;
+
+                    DecimalFormat formatter = new DecimalFormat("00");
+                    String toSend = entry.getText() + " " + formatter.format(hours) + ":" + formatter.format(minutes) + ":" + formatter.format(seconds);
+                    entry.setTextTime(formatter.format(hours) + ":" + formatter.format(minutes) + ":" + formatter.format(seconds));
+
+                    if (!entry.isRemoveTimeSuffix()) {
+                        toSend = toSend + "m";
+                        entry.setTextTime(formatter.format(minutes) + ":" + formatter.format(seconds) + "m");
+                    }
+
+                    entry.sendScoreboardUpdate(toSend);
+
+                    if (entry.getInterval() <= 0) {
+                        if (!(entry.isPaused())) {
+                            if (entry.isCountup()) {
+                                entry.setTime(entry.getTime().add(BigDecimal.ONE));
+                            } else {
+                                entry.setTime(entry.getTime().subtract(BigDecimal.ONE));
+                            }
+                        }
+
+                        entry.setInterval(10);
+                    }
+
+                    continue;
+                }
+
+                Iterator<Wrapper> wrapperIterator = getWrappers().iterator();
+                while (wrapperIterator.hasNext()) {
+                    Wrapper wrapper = wrapperIterator.next();
+
+                    if (getEntries().size() == 0) {
+                        scoreboard.resetScores(wrapper.getKey());
+                        keys.remove(wrapper);
+                        scores.remove(wrapper);
+                        continue;
+                    }
+
+                    wrapper.sendScoreboardUpdate(wrapper.getText());
+                }
+
+            }
+        }.runTaskTimer(Glaedr.getPlugin(), 2l, 2l);
+    }
+
 }

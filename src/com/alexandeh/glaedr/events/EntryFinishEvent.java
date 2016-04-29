@@ -11,7 +11,7 @@ import org.bukkit.event.HandlerList;
 @Getter
 @Setter
 /**
- * This event is called once a countdown entry reaches 0 seconds
+ * This event is called when an entry is abruptly cancelled by entry#cancel
  */
 public class EntryFinishEvent extends Event {
 
@@ -25,7 +25,6 @@ public class EntryFinishEvent extends Event {
         this.scoreboard = scoreboard;
         this.player = scoreboard.getPlayer();
     }
-
     public HandlerList getHandlers() {
         return handlers;
     }

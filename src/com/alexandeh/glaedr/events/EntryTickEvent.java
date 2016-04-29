@@ -11,7 +11,7 @@ import org.bukkit.event.HandlerList;
 @Getter
 @Setter
 /**
- * This event is called every time an entry is updated to a player scoreboard
+ * This event is called when an entry is abruptly cancelled by entry#cancel
  */
 public class EntryTickEvent extends Event {
 
@@ -25,7 +25,6 @@ public class EntryTickEvent extends Event {
         this.scoreboard = scoreboard;
         this.player = scoreboard.getPlayer();
     }
-
     public HandlerList getHandlers() {
         return handlers;
     }
