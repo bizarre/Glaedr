@@ -91,6 +91,16 @@ public class Glaedr implements Listener {
             player.setScoreboard(playerScoreboard.getScoreboard());
         }
     }
+    
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        PlayerScoreboard playerScoreboard = PlayerScoreboard.getScoreboard(player);
+        
+        if (playerScoreboard != null) {
+            PlayerScoreboard.removeScoreboard(playerScoreboard);
+        }
+    }
 
     public static JavaPlugin getPlugin() {
         return plugin;
