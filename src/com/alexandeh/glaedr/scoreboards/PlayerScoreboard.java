@@ -193,6 +193,14 @@ public class PlayerScoreboard {
     public static Set<PlayerScoreboard> getScoreboards() {
         return scoreboards;
     }
+    
+    public static void removeScoreboard(PlayerScoreboard playerScoreboard) {
+        scoreboards.remove(playerScoreboard);
+        
+        for(Entry entry : playerScoreboard.getEntries() {
+            entry.cancel();
+        }
+     }
 
     private List<Wrapper> getTopWrappers() {
         List<Wrapper> toReturn = new ArrayList<>();
