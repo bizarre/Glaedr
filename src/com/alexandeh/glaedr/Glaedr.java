@@ -134,15 +134,15 @@ public class Glaedr implements Listener
 		}
 	}
 	
-    @EventHandler
-    public void onQuit(PlayerQuitEvent event)
-    {
-        Player player = event.getPlayer();
-        PlayerScoreboard playerScoreboard = PlayerScoreboard.getScoreboard(player);
+	@EventHandler
+   	public void onQuit(PlayerQuitEvent event)
+    	{
+        	Player player = event.getPlayer();
+        	PlayerScoreboard playerScoreboard = PlayerScoreboard.getScoreboard(player);
         
-        if(playerScoreboard != null)
-        {
-            PlayerScoreboard.removeScoreboard(playerScoreboard);
-        }
-    }
+        	if(playerScoreboard != null)
+        	{
+            	PlayerScoreboard.removeScoreboard(playerScoreboard);
+ 		}
+    	}
 }
