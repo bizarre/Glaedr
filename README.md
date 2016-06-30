@@ -1,6 +1,8 @@
 # Glaedr
 Extensive yet simplistic Scoreboard API for the Bukkit/Spigot API
 
+Project is currently not being worked on, I may update it in the future (as I do have a newer version).
+
 ## Beta Version Changelog
 + Removed how each entry creates it's own BukkitTask, each entry is looped through and edited in one central task. Instead of one task per Entry, there is now one task per PlayerScoreboard. This is extremely more efficient allowing all entries to countdown in sync.
 + Wrappers/Spacers have been added. This will allow you to add a line above and/or below all entries. ![alt tag](https://i.gyazo.com/c72ca55810ae730e0bd4345170707f17.png)
