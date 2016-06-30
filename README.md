@@ -1,5 +1,5 @@
 # Glaedr
-Extensive yet simplistic Scoreboard API for the Bukkit/Spigot API
+Extensive yet simplistic Scoreboard API for the Bukkit/Spigot API. Forked version with fixed memory leak and removed lombok dependency.
 
 ## Beta Version Changelog
 + Removed how each entry creates it's own BukkitTask, each entry is looped through and edited in one central task. Instead of one task per Entry, there is now one task per PlayerScoreboard. This is extremely more efficient allowing all entries to countdown in sync.
@@ -8,6 +8,8 @@ Extensive yet simplistic Scoreboard API for the Bukkit/Spigot API
 + The new version is some-what backwards compatible. entry#cancel and entry#pause have been replaced with entry#setCancelled(boolean) and entry#setPaused(boolean).
 + Entries that do not countup nor countdown will still update, so that you can edit the text later and it will update on the scoreboard. This also will keep the position of the entry updated.
 + Installation has been changed a bit.
++ Removed lombok dependency.
++ Fixed Player instance memory leak.
 
 ##### As with any other beta, expect bugs. Feel free to fix them yourself and submit a pull request, or simply file an issue and it will be looked at ASAP.
 
