@@ -1,5 +1,5 @@
 # Glaedr
-Extensive yet simplistic Scoreboard API for the Bukkit/Spigot API
+Extensive yet simplistic Scoreboard API for the Bukkit/Spigot API. Forked version with fixed memory leak and removed lombok dependency.
 
 Project is currently not being worked on, I may update it in the future (as I do have a newer version).
 
@@ -10,11 +10,13 @@ Project is currently not being worked on, I may update it in the future (as I do
 + The new version is some-what backwards compatible. entry#cancel and entry#pause have been replaced with entry#setCancelled(boolean) and entry#setPaused(boolean).
 + Entries that do not countup nor countdown will still update, so that you can edit the text later and it will update on the scoreboard. This also will keep the position of the entry updated.
 + Installation has been changed a bit.
++ Removed lombok dependency.
++ Fixed Player instance memory leak.
 
 ##### As with any other beta, expect bugs. Feel free to fix them yourself and submit a pull request, or simply file an issue and it will be looked at ASAP.
 
 ## Installation
-1. Pull the latest version of Glaedr or download it here.(located in project directory)
+1. Pull the latest version of Glaedr.
 2. Add it to your project's build path. (Note: Make sure to extract Glaedr.jar into your output path, so people don't need to add Glaedr into their server!)
 3. Instantiate Glaedr, you should have something like this in your main class:
 
