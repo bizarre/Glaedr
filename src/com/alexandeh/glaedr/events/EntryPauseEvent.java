@@ -11,7 +11,7 @@ import org.bukkit.event.HandlerList;
 @Getter
 @Setter
 /**
- * This event is called when an entry is abruptly cancelled by entry#cancel
+ * This event is called when an entry is paused
  */
 public class EntryPauseEvent extends Event {
 
