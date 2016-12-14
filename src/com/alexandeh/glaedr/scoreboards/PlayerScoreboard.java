@@ -276,8 +276,10 @@ public class PlayerScoreboard {
                         wrapper.sendScoreboardUpdate(wrapper.getText());
                     }
 
-                    Bukkit.getPluginManager().callEvent(new EntryTickEvent(entry, PlayerScoreboard.this));
-
+                    if(EntryTickEvent.getHandlerList().getRegisteredListeners().length > 0){
+                    	Bukkit.getPluginManager().callEvent(new EntryTickEvent(entry, PlayerScoreboard.this)); 	
+                    }
+                   
                     if (!(entry.isCountdown()) && !entry.isCountup()) {
                         entry.sendScoreboardUpdate(entry.getText());
                         continue;

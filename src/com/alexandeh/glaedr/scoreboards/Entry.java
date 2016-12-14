@@ -137,6 +137,7 @@ public class Entry {
         return this;
     }
 
+    @Deprecated
     public void cancel() {
         setCancelled(true);
     }
