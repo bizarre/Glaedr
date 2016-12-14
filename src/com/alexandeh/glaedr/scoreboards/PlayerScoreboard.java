@@ -292,9 +292,8 @@ public class PlayerScoreboard {
                     if (60 > entry.getTime().intValue() || entry.isBypassAutoFormat()) {
                         String toSend = entry.getText() + " " + entry.getTime();
                         if (!entry.isRemoveTimeSuffix()) {
-                            toSend = toSend + "s";
+                            toSend += "s";
                         }
-                        entry.setTextTime(entry.getTime() + "s");
                         entry.sendScoreboardUpdate(toSend);
                         if (!(entry.isPaused())) {
                             if (entry.isCountup()) {
